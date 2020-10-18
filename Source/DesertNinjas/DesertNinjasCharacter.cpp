@@ -84,6 +84,13 @@ ADesertNinjasCharacter::ADesertNinjasCharacter()
 
 	// By default the player is in this mode 
 	bIdleWalkRun = true;
+
+	// Stats params 
+	MaxHealth = 100.f;
+	BaseHealth = 65.f;
+	MaxStamina = 150.f;
+	BaseStamina = 120.f;
+	Coins = 0;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -119,6 +126,7 @@ void ADesertNinjasCharacter::UpdateAnimation()
 
 	if (bIsThrowing) {
 		bIsThrowing = false;
+		DecreaseStamina();
 		UPaperFlipbook* DesiredThrowingStyle =
 			(GetCharacterMovement()->IsFalling()) ? ThrowObjectJumpAnimation : ThrowObjectAnimation;
 		if (GetSprite()->GetFlipbook() != DesiredThrowingStyle)
@@ -152,6 +160,44 @@ void ADesertNinjasCharacter::UpdateBasicAnimation() {
 	if( GetSprite()->GetFlipbook() != DesiredAnimation 	)
 	{
 		GetSprite()->SetFlipbook(DesiredAnimation);
+	}
+}
+
+void ADesertNinjasCharacter::DecreaseStamina()
+{
+	if (BaseStamina > 10) {
+		BaseStamina -= 10;
+	}
+}
+
+void ADesertNinjasCharacter::IncrementCoins(int32 Amount)
+{
+	Coins += Amount;
+}
+
+void ADesertNinjasCharacter::IncrementHealth(float Amount)
+{
+	if (BaseHealth + Amount >= MaxHealth)
+	{
+		BaseHealth = MaxHealth;
+	}
+	else
+	{
+		BaseHealth += Amount;
+	}
+}
+
+void ADesertNinjasCharacter::DecrementHealth(float Amount)
+{
+	if (BaseHealth - Amount <= 0.f)
+	{
+		BaseHealth -= Amount;
+		UE_LOG(LogTemp, Warning, TEXT("DecrementHealth::Die()"));
+		// Die();
+	}
+	else
+	{
+		BaseHealth -= Amount;
 	}
 }
 
