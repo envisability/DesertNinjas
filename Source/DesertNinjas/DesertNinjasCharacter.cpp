@@ -15,6 +15,9 @@ DEFINE_LOG_CATEGORY_STATIC(SideScrollerCharacter, Log, All);
 //////////////////////////////////////////////////////////////////////////
 // ADesertNinjasCharacter
 
+
+
+
 ADesertNinjasCharacter::ADesertNinjasCharacter()
 {
 	// Use only Yaw from the controller and ignore the rest of the rotation.
@@ -74,17 +77,77 @@ ADesertNinjasCharacter::ADesertNinjasCharacter()
 	// Enable replication on the Sprite component so animations show up when networked
 	GetSprite()->SetIsReplicated(true);
 	bReplicates = true;
+
+	/** Init Params*/
+	bIsAttacking = false;
+	bIsThrowing = false;
+
+	// By default the player is in this mode 
+	bIdleWalkRun = true;
 }
 
 //////////////////////////////////////////////////////////////////////////
 // Animation
 
+void ADesertNinjasCharacter::Attack()
+{
+	// Flag attack
+	bIsAttacking = true;
+	bIdleWalkRun = false;
+}
+
+void ADesertNinjasCharacter::ThrowObject()
+{
+	bIsThrowing = true;
+	bIdleWalkRun = false;
+}
+
 void ADesertNinjasCharacter::UpdateAnimation()
 {
+	if (bIsAttacking) {
+		// Attack only once
+		bIsAttacking = false;
+
+		UPaperFlipbook* DesiredAttackStyle = 
+			(GetCharacterMovement()->IsFalling()) ? JumpAttackAnimation : AttackAnimation;
+		if (GetSprite()->GetFlipbook() != DesiredAttackStyle)
+		{
+			GetSprite()->SetFlipbook(DesiredAttackStyle);
+		}
+		DelayIdleWalkRunAnimationUpdate(0.7f);
+	}
+
+	if (bIsThrowing) {
+		bIsThrowing = false;
+		UPaperFlipbook* DesiredThrowingStyle =
+			(GetCharacterMovement()->IsFalling()) ? ThrowObjectJumpAnimation : ThrowObjectAnimation;
+		if (GetSprite()->GetFlipbook() != DesiredThrowingStyle)
+		{
+			GetSprite()->SetFlipbook(DesiredThrowingStyle);
+		}
+		DelayIdleWalkRunAnimationUpdate(0.7f);
+	}
+
+	if (bIdleWalkRun) {
+		UpdateBasicAnimation();
+	}
+	
+}
+
+void ADesertNinjasCharacter::Jump() {
+	Super::Jump();
+	UE_LOG(LogTemp, Warning, TEXT("Jumping"));
+	bIdleWalkRun = false;
+	GetSprite()->SetFlipbook(JumpAnimation);
+	DelayIdleWalkRunAnimationUpdate(0.7f);
+}
+
+void ADesertNinjasCharacter::UpdateBasicAnimation() {
+	// Resume normal behavior 
+	bIdleWalkRun = true;
 	const FVector PlayerVelocity = GetVelocity();
 	const float PlayerSpeedSqr = PlayerVelocity.SizeSquared();
 
-	// Are we moving or standing still?
 	UPaperFlipbook* DesiredAnimation = (PlayerSpeedSqr > 0.0f) ? RunningAnimation : IdleAnimation;
 	if( GetSprite()->GetFlipbook() != DesiredAnimation 	)
 	{
@@ -92,10 +155,10 @@ void ADesertNinjasCharacter::UpdateAnimation()
 	}
 }
 
+
 void ADesertNinjasCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-	
 	UpdateCharacter();	
 }
 
@@ -105,10 +168,17 @@ void ADesertNinjasCharacter::Tick(float DeltaSeconds)
 
 void ADesertNinjasCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
 {
-	// Note: the 'Jump' action and the 'MoveRight' axis are bound to actual keys/buttons/sticks in DefaultInput.ini (editable from Project Settings..Input)
+	// Note: the 'Jump' action and the 'MoveRight' axis are bound to actual 
+	// keys/buttons/sticks in DefaultInput.ini (editable from 
+	// Project Settings..Input)
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ADesertNinjasCharacter::MoveRight);
+
+	// Custom actions
+	PlayerInputComponent->BindAction("Attack", IE_Released, this, &ADesertNinjasCharacter::Attack);
+	PlayerInputComponent->BindAction("Throw", IE_Released, this, &ADesertNinjasCharacter::ThrowObject);
+	
 
 	PlayerInputComponent->BindTouch(IE_Pressed, this, &ADesertNinjasCharacter::TouchStarted);
 	PlayerInputComponent->BindTouch(IE_Released, this, &ADesertNinjasCharacter::TouchStopped);
@@ -154,4 +224,9 @@ void ADesertNinjasCharacter::UpdateCharacter()
 			Controller->SetControlRotation(FRotator(0.0f, 0.0f, 0.0f));
 		}
 	}
+}
+
+void ADesertNinjasCharacter::DelayIdleWalkRunAnimationUpdate(float duration) {
+	GetWorldTimerManager().SetTimer(GeneralTimerHandler, this,
+		&ADesertNinjasCharacter::UpdateBasicAnimation, duration, false);
 }
