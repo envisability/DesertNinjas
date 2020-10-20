@@ -28,6 +28,7 @@ void AExplosive::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor
 		/*AEnemy* Enemy = Cast<AEnemy>(OtherActor);*/
 		if (Main)
 		{
+			UE_LOG(LogTemp, Warning, TEXT("Fire on explosive bp"));
 			OnExplosionBP(Main);
 			if (OverlapParticles)
 			{

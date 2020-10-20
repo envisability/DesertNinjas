@@ -1,4 +1,4 @@
-#include "Item.h"
+#include "../Source/DesertNinjas/Public/Item.h"
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/BoxComponent.h"

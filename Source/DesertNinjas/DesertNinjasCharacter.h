@@ -8,6 +8,16 @@
 
 class UTextRenderComponent;
 
+UENUM(BlueprintType)
+enum class EMovementStatus : uint8
+{
+	EMS_Normal UMETA(DisplayName = "Normal"),
+	EMS_Running UMETA(DisplayName = "Running"),
+	EMS_Sprinting UMETA(DisplayName = "Sprinting"),
+	EMS_Dead UMETA(DisplayName = "Dead"),
+	EMS_MAX UMETA(DisplayName = "DefaultMAX")
+};
+
 /**
  * This class is the default character for DesertNinjas, and it is responsible for all
  * physical interaction between the player and the world.
@@ -67,9 +77,19 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
 	class UPaperFlipbook* DieAnimation;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
+	class UPaperFlipbook* StayDead;
+
 	// Throw object while jumping animation
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
 	class UPaperFlipbook* ThrowObjectJumpAnimation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item | Sounds")
+	class USoundCue* WalkingSound;
+
+	// Indicates the movement status of the player 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Enums")
+	EMovementStatus MovementStatus;
 
 
 	/** Called for side to side input */
@@ -124,6 +144,14 @@ protected:
 
 	// Return to basic animation movement (idle to run)
 	void UpdateBasicAnimation();
+
+	// Sets the movement status of the character
+	void SetMovementStatus(EMovementStatus Status);
+
+	// Kill the character
+	void Die();
+
+	void SetStayDead();
 
 public:
 	/** Stats */

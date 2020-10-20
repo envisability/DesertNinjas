@@ -9,6 +9,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "Camera/CameraComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 DEFINE_LOG_CATEGORY_STATIC(SideScrollerCharacter, Log, All);
 
@@ -37,7 +38,6 @@ ADesertNinjasCharacter::ADesertNinjasCharacter()
 	CameraBoom->SetUsingAbsoluteRotation(true);
 	CameraBoom->bDoCollisionTest = false;
 	CameraBoom->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
-	
 
 	// Create an orthographic camera (no perspective) and attach it to the boom
 	SideViewCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("SideViewCamera"));
@@ -78,9 +78,11 @@ ADesertNinjasCharacter::ADesertNinjasCharacter()
 	GetSprite()->SetIsReplicated(true);
 	bReplicates = true;
 
-	/** Init Params*/
+	/** Init status*/
 	bIsAttacking = false;
 	bIsThrowing = false;
+
+	MovementStatus = EMovementStatus::EMS_Normal;
 
 	// By default the player is in this mode 
 	bIdleWalkRun = true;
@@ -161,6 +163,11 @@ void ADesertNinjasCharacter::UpdateBasicAnimation() {
 	{
 		GetSprite()->SetFlipbook(DesiredAnimation);
 	}
+
+	// Make walking sound 
+	/*if (WalkingSound) {
+		UGameplayStatics::PlaySound2D(this, WalkingSound);
+	}*/
 }
 
 void ADesertNinjasCharacter::DecreaseStamina()
@@ -189,11 +196,12 @@ void ADesertNinjasCharacter::IncrementHealth(float Amount)
 
 void ADesertNinjasCharacter::DecrementHealth(float Amount)
 {
+	UE_LOG(LogTemp, Warning, TEXT("DecrementHealth"));
 	if (BaseHealth - Amount <= 0.f)
 	{
 		BaseHealth -= Amount;
 		UE_LOG(LogTemp, Warning, TEXT("DecrementHealth::Die()"));
-		// Die();
+		Die();
 	}
 	else
 	{
@@ -205,6 +213,10 @@ void ADesertNinjasCharacter::DecrementHealth(float Amount)
 void ADesertNinjasCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
+
+	// There is no need to do anything if the character is dead
+	if (MovementStatus == EMovementStatus::EMS_Dead) return;
+
 	UpdateCharacter();	
 }
 
@@ -275,4 +287,26 @@ void ADesertNinjasCharacter::UpdateCharacter()
 void ADesertNinjasCharacter::DelayIdleWalkRunAnimationUpdate(float duration) {
 	GetWorldTimerManager().SetTimer(GeneralTimerHandler, this,
 		&ADesertNinjasCharacter::UpdateBasicAnimation, duration, false);
+}
+
+void ADesertNinjasCharacter::Die() {
+	if (MovementStatus == EMovementStatus::EMS_Dead) return;
+
+	// Set character animation to die 
+	GetSprite()->SetFlipbook(DieAnimation);
+	GetWorldTimerManager().SetTimer(GeneralTimerHandler, this,
+		&ADesertNinjasCharacter::SetStayDead, 0.5f, false);
+	
+	// Set character status to di
+	SetMovementStatus(EMovementStatus::EMS_Dead);
+}
+
+void ADesertNinjasCharacter::SetStayDead()
+{
+	GetSprite()->SetFlipbook(StayDead);
+}
+
+void ADesertNinjasCharacter::SetMovementStatus(EMovementStatus Status)
+{
+	MovementStatus = Status;
 }

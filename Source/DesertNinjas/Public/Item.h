@@ -18,26 +18,26 @@ public:
 
 	/** Base shape collision  */
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Item | Collision")
-		class USphereComponent* CollisionVolume;
+	class USphereComponent* CollisionVolume;
 
 	/** Base Mesh Component */
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Item | Mesh")
-		class UStaticMeshComponent* Mesh;
+	class UStaticMeshComponent* Mesh;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item | Particles")
-		class UParticleSystemComponent* IdleParticlesComponent;
+	class UParticleSystemComponent* IdleParticlesComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item | Particles")
-		class UParticleSystem* OverlapParticles;
+	class UParticleSystem* OverlapParticles;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item | Sounds")
-		class USoundCue* OverlapSound;
+	class USoundCue* OverlapSound;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item | ItemProperties")
-		bool bRotate;
+	bool bRotate;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item | ItemProperties")
-		float RotationRate;
+	float RotationRate;
 
 protected:
 	// Called when the game starts or when spawned
